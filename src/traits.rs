@@ -1,3 +1,4 @@
+use std::path::Path;
 pub trait Vertex {}
 
 pub trait Edge<V>
@@ -19,4 +20,10 @@ where
     fn nv(&self) -> usize;
     fn ne(&self) -> usize;
     fn vertices(&self) -> Self::VIT;
+    fn outdegree(&self, v: V) -> V;
+    fn indegree(&self, v: V) -> V;
+    fn outneighbors(&self, v: V) -> &[V];
+    fn has_edge(&self, e: E) -> bool;
+    fn from_edge_file(fname: &Path) -> Self;
+    fn bfs(&self, v: V) -> Vec<V>;
 }
