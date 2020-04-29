@@ -8,4 +8,7 @@ edition = "2018"
 
 [dependencies]
 graph_matrix = { path = "../graph_matrix" }
+ordered-float = "1.0.2"
+priority-queue = "0.7.0"
 bitvec = "0.17.3"
+num = "0.2.1"

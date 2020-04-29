@@ -26,4 +26,7 @@ where
     fn has_edge(&self, e: E) -> bool;
     fn from_edge_file(fname: &Path) -> Self;
     fn bfs(&self, v: V) -> Vec<V>;
+    fn dijkstra<W>(&self, v: V, weights: fn(V, V) -> W) -> Vec<W>
+    where
+        W: num::Float;
 }

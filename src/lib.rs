@@ -1,5 +1,8 @@
 use crate::traits::Graph;
 use bitvec::prelude as bv;
+use num;
+use ordered_float::OrderedFloat;
+use priority_queue::PriorityQueue;
 use std::fmt;
 use std::fs::File;
 use std::io::BufRead;
@@ -10,7 +13,10 @@ pub mod traits;
 
 const VOOR: &str = "vertex out of range";
 
-pub trait SimpleVertex: graph_matrix::MxElement + fmt::Display + traits::Vertex {}
+pub trait SimpleVertex:
+    graph_matrix::MxElement + fmt::Display + traits::Vertex + std::hash::Hash
+{
+}
 
 impl traits::Vertex for u8 {}
 impl traits::Vertex for u16 {}
@@ -37,7 +43,7 @@ where
     fn next(&mut self) -> Option<Self::Item> {
         self.start += V::one();
         if self.start >= self.end {
-        self.start += V::one();
+            self.start += V::one();
             return None;
         }
         Some(self.start)
@@ -137,8 +143,8 @@ where
             }
             let src128: u128 = s1.parse().unwrap();
             let dst128: u128 = s2.parse().unwrap();
-            let src = V::from(src128).expect("vertex out of range");
-            let dst = V::from(dst128).expect("vertex out of range");
+            let src = V::from(src128).expect(VOOR);
+            let dst = V::from(dst128).expect(VOOR);
             edgelist.push((src, dst));
         }
         let bedges = edgelist.clone().iter().map(|x| (x.1, x.0)).collect();
@@ -195,6 +201,50 @@ where
             cur_level.sort_unstable();
         }
         levels
+    }
+    fn dijkstra<W>(&self, v: V, weights: fn(V, V) -> W) -> Vec<W>
+    where
+        W: num::Float,
+    {
+        let vu = v.to_usize().expect("invalid vertex");
+        let n = self.nv();
+        let mut visited: bv::BitVec<bv::Lsb0, u64> = bv::BitVec::repeat(false, n);
+        let mut pq = PriorityQueue::<V, OrderedFloat<W>>::new();
+        let mut dists = vec![W::infinity(); n];
+        let mut parents = vec![V::zero(); n];
+
+        dists[vu] = W::zero();
+        unsafe {
+            visited.set_unchecked(vu, true);
+        }
+        pq.push(v, OrderedFloat(W::zero()));
+
+        // println!("starting pq");
+        while !pq.is_empty() {
+            let (u, _) = pq.pop().unwrap();
+            // println!("popped {}", u);
+            let uu = u.to_usize().expect("invalid vertex");
+            let d = dists[uu];
+            for v in self.outneighbors(u) {
+                let vu = (*v).to_usize().expect("invalid vertex");
+                let alt = d + weights(u, *v);
+                if !visited[vu] {
+                    unsafe {
+                        visited.set_unchecked(vu, true);
+                    }
+                    dists[vu] = alt;
+                    parents[vu] = u;
+                    pq.push(*v, OrderedFloat(alt));
+                } else if alt < dists[vu] {
+                    dists[vu] = alt;
+                    parents[vu] = u;
+                    pq.change_priority(v, OrderedFloat(alt));
+                    // pq.push(*v, OrderedFloat(alt));
+                }
+            }
+        }
+        parents[vu] = V::zero();
+        dists
     }
 }
 
