@@ -3,13 +3,9 @@ use rustgraphs::StaticDiGraph;
 use std::env;
 use std::path::Path;
 use std::time::Instant;
-
 pub const NRUNS: usize = 50;
 
-fn weights(_: u32, _: u32) -> f32 {
-    1f32
-}
-
+fn weights(_: u32, _: u32) -> f32 { 1f32 }
 fn main() {
     let args: Vec<String> = env::args().collect();
     let filename = &args[1];
@@ -66,3 +62,4 @@ fn main() {
         avg / NRUNS as f64
     );
 }
+

@@ -30,3 +30,4 @@ where
     where
         W: num::Float;
 }
+
